@@ -340,8 +340,10 @@ def _candidate_bounds(cycle_config):
     ΔT_pp_min_cond = cycle_config["ΔT_pp_min_cond"]
     T_ref_1_min = T_c_in - 30.0
     T_ref_1_max = T_c_in - ΔT_pp_min_evap
-    s_ref_1_min = _cp_props("S", "T", T_ref_1_max, "Q", 1, f"REFPROP::{refrigerant}") - 0.2*_cp_props("S", "T", T_ref_1_min, "Q", 1, f"REFPROP::{refrigerant}")
-    s_ref_1_max = _cp_props("S", "T", T_ref_1_max, "Q", 1, f"REFPROP::{refrigerant}") + 0.2*_cp_props("S", "T", T_ref_1_max, "Q", 1, f"REFPROP::{refrigerant}")
+    s_min_at_T = np.min(_cp_props("S", "T", T_ref_1_min, "Q", 1, f"REFPROP::{refrigerant}"), _cp_props("S", "T", T_ref_1_max, "Q", 1, f"REFPROP::{refrigerant}"))
+    s_max_at_T = np.max(_cp_props("S", "T", T_ref_1_min, "Q", 1, f"REFPROP::{refrigerant}"), _cp_props("S", "T", T_ref_1_max, "Q", 1, f"REFPROP::{refrigerant}"))
+    s_ref_1_min = s_min_at_T - 0.2 * s_max_at_T
+    s_ref_1_max = s_max_at_T + 0.2 * s_max_at_T
     return {
         "PR": (1.01, 90.0),
         "s_ref_1": (s_ref_1_min, s_ref_1_max),
