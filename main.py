@@ -19,7 +19,7 @@ logger = setup_logger()
 
 # config file of the analysis. CHPC.ini evaluates a single cycle, COP_vs_eff.ini the COP for a grid of
 # turbine and compressor efficiencies. The cycle calculation method is selected in the config file.
-config_file = "config/CO2/COP_vs_eff.ini"
+config_file = "config/R1234ze(E)/COP_vs_eff.ini"
 
 
 

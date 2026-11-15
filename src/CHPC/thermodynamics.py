@@ -213,7 +213,7 @@ def _compute_min_approach_cond(ṁ_ref, h_ref_2, h_ref_3, p_ref_2, T_h_in, cp_h,
     q_arr = np.linspace(0, Q_cond, num_points)
     h_arr = h_ref_2 - q_arr / ṁ_ref
     T_ref = _get_abstract_state(f"REFPROP::{refrigerant}").PropsSI("T", "H", h_arr, "P", p_ref_2)
-    T_ext = T_h_in + q_arr / (ṁ_h * cp_h)
+    T_ext = T_h_in + (Q_cond - q_arr) / (ṁ_h * cp_h)
     delta_t = T_ref - T_ext
     return np.nanmin(delta_t)
 
@@ -345,10 +345,10 @@ def _candidate_bounds(cycle_config):
     s_ref_1_min = s_min_at_T - 0.2 * s_max_at_T
     s_ref_1_max = s_max_at_T + 0.2 * s_max_at_T
     return {
-        "PR": (1.01, 90.0),
+        "PR": (1.01, 30.0),
         "s_ref_1": (s_ref_1_min, s_ref_1_max),
         "T_ref_1": (T_ref_1_min, T_ref_1_max),
-        "T_ref_3": (T_h_in + ΔT_pp_min_cond, T_h_in + 50.0),
+        "T_ref_3": (T_h_in + ΔT_pp_min_cond, T_h_in + 30.0),
     }
 
 def evaluate_cycle_candidate(cycle_config, PR, T_ref_1_var, s_ref_1_var, T_ref_3, verbose=True):
