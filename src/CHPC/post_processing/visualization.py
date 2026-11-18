@@ -7,9 +7,9 @@ from scipy.optimize import brentq
 from pathlib import Path
 
 from thermoplot import thermoplot_cached, configure_matplotlib
-from CHPC.logger import setup_logger
-from CHPC.thermodynamics import _get_abstract_state
-from CHPC.results import load_results, method_suffix
+from CHPC.utils.logger import setup_logger
+from CHPC.cycle_evaluation.thermodynamics import _get_abstract_state
+from CHPC.utils.results import load_results, method_suffix
 
 logger = setup_logger()
 

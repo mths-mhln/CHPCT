@@ -3,7 +3,7 @@ import itertools
 import numpy as np
 import scipy.optimize as opt
 from thermoplot import CoolPropAbstractState
-from CHPC.logger import setup_logger
+from CHPC.utils.logger import setup_logger
 logger = setup_logger()
 
 _ABSTRACT_STATES = {}
@@ -531,7 +531,7 @@ def solve_cycle(cycle_config, general_config, verbose=True):
     calculation_method = general_config.get("calculation_method", "full_optimization")
     if calculation_method == "three_temp_fix":
         # imported here, since thermodynamics_three_temp_fix imports the property functions of this module
-        from CHPC.thermodynamics_three_temp_fix import solve_cycle_three_temp_fix
+        from CHPC.cycle_evaluation.thermodynamics_three_temp_fix import solve_cycle_three_temp_fix
         return solve_cycle_three_temp_fix(cycle_config, general_config, verbose=verbose)
     if calculation_method == "fixed_PR":
         return _optimize_cycle(cycle_config, general_config, fixed_PR=float(cycle_config["PR"]), verbose=verbose)

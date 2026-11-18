@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from CHPC.visualization import make_cycle_plots, make_COP_vs_eff_plot, make_empty_thdy_plot
+from CHPC.post_processing.visualization import make_cycle_plots, make_COP_vs_eff_plot, make_empty_thdy_plot
 
 
 
@@ -29,7 +29,7 @@ plt.show()
 
 # Thesis figures: effect of the compressor and turbine efficiency on the cycle of a CHPC config file, 
 # and the COP maps of two refrigerants side by side
-# from CHPC.effect_of_eff_on_COP import plot_single_cycle_custom_ts
-# from CHPC.COP_vs_eff_comparison_plots import plot_side_by_side_contours
+# from CHPC.COP_vs_eff.efficiency_effect_on_cop import plot_single_cycle_custom_ts
+# from CHPC.COP_vs_eff.cop_efficiency_comparison import plot_side_by_side_contours
 # plot_single_cycle_custom_ts("config/R1234ze(E)/CHPC.ini")
 # plot_side_by_side_contours(refrigerants=("CO2", "R1234ze(E)"))

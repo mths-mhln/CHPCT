@@ -2,7 +2,7 @@
 the base cases (CHPC config files) are perturbed one at a time by -20 % and +20 %, after which the optimal cycle of 
 every perturbed configuration is evaluated. Temperatures are perturbed in degrees Celsius, since a perturbation of 20 % 
 in kelvin would place the heat source above the heat sink. The shaft efficiency is not perturbed, as +20 % exceeds 1.
-Run from the root of the repository: python perturbation_study/perturbation_study.py
+Run from the root of the repository: python -m CHPC.post_processing.perturbation_study
 """
 import multiprocessing
 from pathlib import Path
@@ -11,11 +11,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from thermoplot import configure_matplotlib, thermoplot_cached
-from CHPC.config import Config
-from CHPC.logger import setup_logger
-from CHPC.results import save_results, load_results
-from CHPC.thermodynamics import solve_cycle, compute_performance, build_ts_data, _candidate_bounds, _cp_props
-from CHPC.visualization import THERMOPLOT_CONFIG_DIR, TS_MARGINS
+from CHPC.utils.config import Config
+from CHPC.utils.logger import setup_logger
+from CHPC.utils.results import save_results, load_results
+from CHPC.cycle_evaluation.thermodynamics import solve_cycle, compute_performance, build_ts_data, _candidate_bounds, _cp_props
+from CHPC.post_processing.visualization import THERMOPLOT_CONFIG_DIR, TS_MARGINS
 
 logger = setup_logger()
 

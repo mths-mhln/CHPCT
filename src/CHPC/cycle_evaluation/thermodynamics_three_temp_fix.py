@@ -3,8 +3,8 @@ import contextlib
 import numpy as np
 from scipy.optimize import minimize_scalar
 
-from CHPC.logger import setup_logger
-from CHPC.thermodynamics import (_cp_props, _vapour_quality_scaler, _specific_heat_from_isobar_path,
+from CHPC.utils.logger import setup_logger
+from CHPC.cycle_evaluation.thermodynamics import (_cp_props, _vapour_quality_scaler, _specific_heat_from_isobar_path,
                                  _sample_isobar_ts_uniform_arc, _cop_turb)
 
 logger = setup_logger()

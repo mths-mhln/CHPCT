@@ -3,8 +3,8 @@ from pathlib import Path
 import numpy as np
 from rich.progress import track
 
-from CHPC.thermodynamics import solve_cycle, compute_performance
-from CHPC.results import method_suffix
+from CHPC.cycle_evaluation.thermodynamics import solve_cycle, compute_performance
+from CHPC.utils.results import method_suffix
 
 
 def _build_efficiency_grid(general_config):

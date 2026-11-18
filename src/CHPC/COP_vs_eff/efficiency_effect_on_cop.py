@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from thermoplot import thermoplot_cached, configure_matplotlib
-from CHPC.config import Config
-from CHPC.logger import setup_logger
-from CHPC.thermodynamics import _cp_props, _isobar_segment, solve_cycle
-from CHPC.visualization import _q, THERMOPLOT_CONFIG_DIR
+from CHPC.utils.config import Config
+from CHPC.utils.logger import setup_logger
+from CHPC.cycle_evaluation.thermodynamics import _cp_props, _isobar_segment, solve_cycle
+from CHPC.post_processing.visualization import _q, THERMOPLOT_CONFIG_DIR
 
 logger = setup_logger()
 

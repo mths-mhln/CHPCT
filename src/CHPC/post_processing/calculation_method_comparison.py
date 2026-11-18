@@ -4,7 +4,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 
-from CHPC.logger import setup_logger
+from CHPC.utils.logger import setup_logger
 
 
 logger = setup_logger()

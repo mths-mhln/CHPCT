@@ -4,10 +4,10 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.append(f'{SCRIPT_DIR}/SOFTX-D-24-00232-main/scripts_and_examples/Python_examples/')
 sys.path.append(f'{SCRIPT_DIR}/SOFTX-D-24-00232-main/python_modules/')
 
-from CHPC.config import Config
-from CHPC.thermodynamics import solve_cycle, compute_performance, build_ts_data, build_ph_data
-from CHPC.visualization import make_thdy_plot
-from CHPC.logger import setup_logger
+from CHPC.utils.config import Config
+from CHPC.cycle_evaluation.thermodynamics import solve_cycle, compute_performance, build_ts_data, build_ph_data
+from CHPC.post_processing.visualization import make_thdy_plot
+from CHPC.utils.logger import setup_logger
 from HP_CoolProp_example import MTW_HP_calculator
 import numpy as np
 import warnings

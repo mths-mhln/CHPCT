@@ -4,7 +4,7 @@
 2) the candidates evaluated by the optimizer are shown in a scatter matrix of the design space, and
 3) the coverage of the design space by the candidates is quantified, with the share of the design space that has 
    been visited, and with the centred L2 discrepancy compared with reference samples, such that it can be interpreted.
-Run from the root of the repository: python global_optimum_check/global_optimum_check.py
+Run from the root of the repository: python -m CHPC.post_processing.global_optimum_check
 """
 import multiprocessing
 from pathlib import Path
@@ -14,10 +14,10 @@ import matplotlib.pyplot as plt
 from scipy.stats import qmc
 
 from thermoplot import configure_matplotlib
-from CHPC.config import Config
-from CHPC.logger import setup_logger
-from CHPC.results import save_results, load_results
-from CHPC.thermodynamics import solve_cycle, compute_performance, _candidate_bounds
+from CHPC.utils.config import Config
+from CHPC.utils.logger import setup_logger
+from CHPC.utils.results import save_results, load_results
+from CHPC.cycle_evaluation.thermodynamics import solve_cycle, compute_performance, _candidate_bounds
 
 logger = setup_logger()
 

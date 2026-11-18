@@ -3,11 +3,11 @@ import sys
 cwd = os.getcwd()
 sys.path.append(f'{cwd}/test/system_tests/')
 
-from CHPC.config import Config
-from CHPC.thermodynamics import solve_cycle, compute_performance, build_ts_data, build_ph_data
-from CHPC.cop_sweep import run_cop_vs_eff_investigation
-from CHPC.results import save_results, method_suffix
-from CHPC.logger import setup_logger
+from CHPC.utils.config import Config
+from CHPC.cycle_evaluation.thermodynamics import solve_cycle, compute_performance, build_ts_data, build_ph_data
+from CHPC.COP_vs_eff.cop_efficiency_sweep import run_cop_vs_eff_investigation
+from CHPC.utils.results import save_results, method_suffix
+from CHPC.utils.logger import setup_logger
 
 from rich.console import Console
 from rich.table import Table

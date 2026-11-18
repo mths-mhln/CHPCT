@@ -25,6 +25,19 @@ uv pip install -e .
 
 On Linux and macOS the environment is activated with `source .venv/bin/activate`.
 
+## Source structure
+
+The Python package is organized by responsibility:
+
+| Folder | Contents |
+| --- | --- |
+| `src/CHPC/cycle_evaluation/` | Thermodynamic cycle solvers and cycle data generation |
+| `src/CHPC/post_processing/` | Diagrams and post-processing studies, including the global optimum, perturbation and calculation-method comparisons |
+| `src/CHPC/utils/` | Configuration parsing, result serialization and logging |
+| `src/CHPC/COP_vs_eff/` | COP versus component-efficiency sweeps, comparison plots and efficiency-effect studies |
+
+The COP modules use descriptive names: `cop_efficiency_sweep.py`, `cop_efficiency_comparison.py` and `efficiency_effect_on_cop.py`.
+
 ## How to run
 
 Running the tool and post-processing its results are separated. `main.py` runs the analysis specified in the config file at the top of the script, and saves the results as `.npz` files in `results/`. Afterwards, `postprocess.py` makes the diagrams from these files:
@@ -45,13 +58,13 @@ The COP sweep saves its progress every 5 cycles, and can be continued after an i
 
 ![COP of R1234ze(E) as a function of the turbine and compressor efficiency](images/COP_vs_eff.png)
 
-The cycle calculation method is selected with `calculation_method`. `full_optimization` optimizes the four variables above, `fixed_PR` optimizes the compressor inlet state and the condenser outlet temperature at a given pressure ratio, and `three_temp_fix` fixes four temperature differences and only optimizes the pressure ratio (the approach of `00_thermodynamics_legacy/thermodynamics_legacy_4.py`). Results of the latter two methods carry the method in their file name, e.g. `COP_vs_eff_R1234ze(E)_COP_turb_three_temp_fix.npz`, such that the methods can be compared with
+The cycle calculation method is selected with `calculation_method`. `full_optimization` optimizes the four variables above, `fixed_PR` optimizes the compressor inlet state and the condenser outlet temperature at a given pressure ratio, and `three_temp_fix` fixes four temperature differences and only optimizes the pressure ratio (the implementation is in `src/CHPC/cycle_evaluation/thermodynamics_three_temp_fix.py`). Results of the latter two methods carry the method in their file name, e.g. `COP_vs_eff_R1234ze(E)_COP_turb_three_temp_fix.npz`, such that the methods can be compared with
 
 ```bash
-python thermodyanmics_calculation_methods_comparison/thermodynamics_calculation_methods_comparison.py --data-dir "results/COP_investigations/R1234ze(E)/data"
+python -m CHPC.post_processing.calculation_method_comparison --data-dir "results/COP_investigations/R1234ze(E)/data"
 ```
 
-Two investigations support the results of the thesis, and are run in the same way from the root of the repository. `global_optimum_check/global_optimum_check.py` repeats the optimization of a cycle for several seeds of the differential evolution algorithm, and shows the coverage of the design space by the evaluated candidates. `perturbation_study/perturbation_study.py` perturbs the cycle specifications of the R1234ze(E), CO2 and MM config files one at a time by -20 % and +20 %, and evaluates the optimal cycle of every configuration in parallel.
+Two investigations support the results of the thesis, and are run as modules from the root of the repository. `python -m CHPC.post_processing.global_optimum_check` repeats the optimization of a cycle for several seeds of the differential evolution algorithm, and shows the coverage of the design space by the evaluated candidates. `python -m CHPC.post_processing.perturbation_study` perturbs the cycle specifications of the R1234ze(E), CO2 and MM config files one at a time by -20 % and +20 %, and evaluates the optimal cycle of every configuration in parallel.
 
 `postprocess.py` also contains the empty T-s and p-h diagrams of a substance, the effect of the component efficiencies on the cycle and the COP maps of two refrigerants side by side. The margins around the cycle and the size of the optimizer progress figure are arguments of `make_cycle_plots`, and the diagram backgrounds are specified in `config/thermoplot/`.
 

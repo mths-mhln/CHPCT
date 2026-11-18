@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from thermoplot import configure_matplotlib
-from CHPC.logger import setup_logger
+from CHPC.utils.logger import setup_logger
 
 
 logger = setup_logger()
