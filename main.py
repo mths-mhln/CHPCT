@@ -19,7 +19,7 @@ logger = setup_logger()
 
 # config file of the analysis. CHPC.ini evaluates a single cycle, COP_vs_eff.ini the COP for a grid of
 # turbine and compressor efficiencies. The cycle calculation method is selected in the config file.
-config_file = "config/R1234ze(E)/COP_vs_eff.ini"
+config_file = "config/R1234ze(E)/CHPC.ini"
 
 
 
@@ -89,5 +89,5 @@ def main(config_file: str, perform_verification: bool = False) -> None:
 
 if __name__ == "__main__":
     start = timeit.default_timer()
-    main(config_file, perform_verification=False)
+    main(config_file, perform_verification=True)
     logger.info(f"Evaluation time: {timeit.default_timer() - start:.2f} seconds")
