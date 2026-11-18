@@ -285,7 +285,7 @@ def _run_global_de(objective, bounds, general_config):
         updating=de_updating,
         disp=False,
         polish=False,
-        seed=42,
+        seed=int(general_config.get("de_seed", 42)),
     )
 
     if general_config.get("analysis_type") != "COP_vs_eff":
@@ -306,7 +306,7 @@ def _objective(x, cycle_config, general_config, fixed_PR=None, trace=None, verbo
         cycle_config: Cycle configuration dictionary.
         general_config: General runtime configuration.
         fixed_PR: Optional pressure ratio to hold fixed.
-        trace: Optional dictionary in which the objective value and feasibility of each evaluation are stored.
+        trace: Optional dictionary in which the candidate, its objective value and its feasibility are stored for each evaluation.
         verbose: Whether to log rejection reasons.
 
     Returns:
@@ -319,6 +319,7 @@ def _objective(x, cycle_config, general_config, fixed_PR=None, trace=None, verbo
     else:
         score = -_cop_turb(cycle_data, cycle_config)
     if trace is not None:
+        trace["x"].append([float(PR), float(T_ref_1_var), float(s_ref_1_var), float(T_ref_3)])
         trace["objective"].append(float(score))
         trace["failed"].append(cycle_data is None)
     return score
@@ -340,12 +341,12 @@ def _candidate_bounds(cycle_config):
     ΔT_pp_min_cond = cycle_config["ΔT_pp_min_cond"]
     T_ref_1_min = T_c_in - 30.0
     T_ref_1_max = T_c_in - ΔT_pp_min_evap
-    s_min_at_T = np.min(_cp_props("S", "T", T_ref_1_min, "Q", 1, f"REFPROP::{refrigerant}"), _cp_props("S", "T", T_ref_1_max, "Q", 1, f"REFPROP::{refrigerant}"))
-    s_max_at_T = np.max(_cp_props("S", "T", T_ref_1_min, "Q", 1, f"REFPROP::{refrigerant}"), _cp_props("S", "T", T_ref_1_max, "Q", 1, f"REFPROP::{refrigerant}"))
+    s_min_at_T = min(_cp_props("S", "T", T_ref_1_min, "Q", 1, f"REFPROP::{refrigerant}"), _cp_props("S", "T", T_ref_1_max, "Q", 1, f"REFPROP::{refrigerant}"))
+    s_max_at_T = max(_cp_props("S", "T", T_ref_1_min, "Q", 1, f"REFPROP::{refrigerant}"), _cp_props("S", "T", T_ref_1_max, "Q", 1, f"REFPROP::{refrigerant}"))
     s_ref_1_min = s_min_at_T - 0.2 * s_max_at_T
     s_ref_1_max = s_max_at_T + 0.2 * s_max_at_T
     return {
-        "PR": (1.01, 30.0),
+        "PR": (1.01, cycle_config.get("PR_max", 30.0)),
         "s_ref_1": (s_ref_1_min, s_ref_1_max),
         "T_ref_1": (T_ref_1_min, T_ref_1_max),
         "T_ref_3": (T_h_in + ΔT_pp_min_cond, T_h_in + 30.0),
@@ -383,14 +384,15 @@ def evaluate_cycle_candidate(cycle_config, PR, T_ref_1_var, s_ref_1_var, T_ref_3
         return None
     fluid = f"REFPROP::{refrigerant}"
     try:
-        p_ref_1 = _cp_props("P", "T", T_ref_1_var, "S", s_ref_1_var, fluid)
+        # state 1 follows from a single (T, s) flash. A second (T, p) flash is ill-posed for candidates inside the 
+        # saturation dome, since p_ref_1 is then the saturation pressure at T_ref_1.
+        p_ref_1, h_ref_1, s_ref_1, Q_ref_1 = _cp_props(("P", "H", "S", "Q"), "T", T_ref_1_var, "S", s_ref_1_var, fluid)
         T_ref_1 = T_ref_1_var
         if T_ref_1 > T_c_in - ΔT_pp_min_evap + 1e-3:
             if verbose:
                 logger.info(f"Candidate rejected due to T_ref_1 constraint: T_ref_1={T_ref_1:.2f} K, T_c_in={T_c_in:.2f} K, ΔT_pp_min_evap={ΔT_pp_min_evap:.2f} K")
             return None
         p_ref_2 = PR * p_ref_1
-        h_ref_1, s_ref_1, Q_ref_1 = _cp_props(("H", "S", "Q"), "T", T_ref_1, "P", p_ref_1, fluid)
         Q_ref_1 = _vapour_quality_scaler(Q_ref_1)
         if Q_ref_1 < 0.999:
             if verbose:
@@ -486,7 +488,10 @@ def _optimize_cycle(cycle_config, general_config, fixed_PR=None, verbose=True):
     else:
         error_message = "Specified PR leads to an impossible cycle."
 
-    optimization_trace = {"objective": [], "failed": []}
+    # the penalties of infeasible candidates are drawn from the global random number generator, which is seeded such 
+    # that a run is reproducible. The penalties drawn in parallel workers (COP vs efficiency investigation) are not.
+    np.random.seed(int(general_config.get("de_seed", 42)))
+    optimization_trace = {"x": [], "objective": [], "failed": []}
     objective = functools.partial(
         _objective,
         cycle_config=cycle_config,
@@ -580,6 +585,9 @@ def compute_performance(cycle_data, cycle_config, general_config):
     Ẇ_turb_is = s["ṁ_ref"] * (s["h_ref_3"] - h_ref_4_is)
     COP_is = Q_out / (Ẇ_comp - Ẇ_turb_is * η_shaft)
     COP_isenth = Q_out / Ẇ_comp
+    # volumetric expansion ratio over the turbine, v_4 / v_3
+    VR_turb = _cp_props("D", "T", s["T_ref_3"], "P", s["p_ref_3"], f"REFPROP::{refrigerant}") / \
+              _cp_props("D", "P", s["p_ref_4"], "H", s["h_ref_4"], f"REFPROP::{refrigerant}")
     return dict(
         Ẇ_turb=Ẇ_turb,
         Ẇ_comp=Ẇ_comp,
@@ -590,6 +598,7 @@ def compute_performance(cycle_data, cycle_config, general_config):
         COP_isenth=COP_isenth,
         Q_in_isenth=Q_in_isenth,
         PR=s["p_ref_2"] / s["p_ref_1"],
+        VR_turb=VR_turb,
         ṁ_ref=s["ṁ_ref"]
     )
 

@@ -19,7 +19,7 @@ logger = setup_logger()
 
 # config file of the analysis. CHPC.ini evaluates a single cycle, COP_vs_eff.ini the COP for a grid of
 # turbine and compressor efficiencies. The cycle calculation method is selected in the config file.
-config_file = "config/R1234ze(E)/CHPC.ini"
+config_file = "config/R1234ze(E)/COP_vs_eff.ini"
 
 
 
@@ -58,6 +58,7 @@ def main(config_file: str, perform_verification: bool = False) -> None:
             ("COP_turb",    f"{perf['COP_turb']:.2f}",       "-",  "Turbine-based coefficient of performance"),
             ("COP_isenth",  f"{perf['COP_isenth']:.2f}",     "-",  "Isenthalpic coefficient of performance"),
             ("PR",          f"{perf['PR']:.2f}",             "-",  "Pressure ratio across the compressor"),
+            ("VR_turb",     f"{perf['VR_turb']:.2f}",        "-",  "Volumetric expansion ratio across the turbine"),
             ("ṁ_ref",       f"{perf['ṁ_ref']:.3f}",         "kg/s",  "Mass flow rate of the refrigerant"),
             ("Ẇ_turb",      f"{perf['Ẇ_turb']:.0f}",         "W",  "Turbine power output"),
             ("Ẇ_comp",      f"{perf['Ẇ_comp']:.0f}",         "W",  "Compressor power input"),
@@ -89,5 +90,5 @@ def main(config_file: str, perform_verification: bool = False) -> None:
 
 if __name__ == "__main__":
     start = timeit.default_timer()
-    main(config_file, perform_verification=True)
+    main(config_file, perform_verification=False)
     logger.info(f"Evaluation time: {timeit.default_timer() - start:.2f} seconds")

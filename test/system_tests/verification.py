@@ -21,6 +21,9 @@ console = Console()
 config = Config(f"{SCRIPT_DIR}/verification.ini")
 cycle_config = config.cycleConfig()
 general_config = config.generalConfig()
+# for these heat source and sink temperatures, the MM cycle requires a pressure ratio above the upper bound of 30 used 
+# in the analyses
+cycle_config["PR_max"] = 90.0
 
 
 def _append_verification_rows(table, refrigerant, perf, mtw_perf):

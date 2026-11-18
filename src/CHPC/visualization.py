@@ -334,7 +334,7 @@ def _add_node_labels(ax, cycle_data, diagram_type):
                     valign = "top"
                 
                 txt = ax.text(x_pos, y_pos, station,
-                             fontsize=12, fontweight='extra bold', color='black',
+                             fontsize=12, color='black',
                              ha='left', va=valign,
                              zorder=13)
                 # Add white stroke for semi-transparent background effect
@@ -356,7 +356,7 @@ def _add_node_labels(ax, cycle_data, diagram_type):
                 y_pos = 10 ** log_y
                 
                 txt = ax.text(x_pos, y_pos, station,
-                             fontsize=12, fontweight='bold', color='black',
+                             fontsize=12, color='black',
                              ha='left', va=valign,
                              zorder=13)
                 # Add white stroke for semi-transparent background effect

@@ -1,4 +1,4 @@
-# Conceptual Heat Pump Cycle Evaluation Tool (CHPCET)
+# Conceptual Heat Pump Cycle (CHPC)
 
 This tool identifies the vapour-compression cycle with maximum COP for a given set of heat source and heat sink characteristics, heat exchanger pinch-point constraints, component efficiencies and refrigerant. The cycle is a single-stage vapour-compression cycle in which the expansion valve is replaced by a turbine expander. It follows from a differential evolution optimization of the compressor pressure ratio, the temperature and entropy at the compressor inlet, and the temperature at the condenser outlet, subject to the pinch-point constraints of the evaporator and condenser. The figure below shows the resulting cycle of R1234ze(E), together with the expansion through an isentropic turbine and through an expansion valve. The diagram background is generated with [thermoplot](https://github.com/mths-mhln/thermoplot), of which a local copy is included in `src/thermoplot`.
 
@@ -34,11 +34,11 @@ python main.py
 python postprocess.py
 ```
 
-Before the analysis, `main.py` verifies the model against pocketTHERM for three heat pump cycles (see `test/system_tests`), which can be switched off with `perform_verification=False` at the bottom of `main.py`. Every refrigerant folder in `config/` contains two config files:
+Before the analysis, `main.py` verifies the model against pocketTHERM for three heat pump cycles (see `test/system_tests`), which can be switched off with `perform_verification=False` at the bottom of `main.py`. The refrigerant folders in `config/` contain two kinds of config files:
 
 | Config file | Analysis | Results |
 | --- | --- | --- |
-| `CHPC.ini` | optimizes a single cycle and prints its performance parameters | T-s, p-h and optimizer progress diagrams in `results/heat_pump_thermodynamic_diagrams/<refrigerant>/` |
+| `CHPC.ini` | optimizes a single cycle and prints its performance parameters, including the volumetric expansion ratio over the turbine | T-s, p-h and optimizer progress diagrams in `results/heat_pump_thermodynamic_diagrams/<refrigerant>/` |
 | `COP_vs_eff.ini` | optimizes the cycle for a grid of turbine and compressor efficiencies | COP maps in `results/COP_investigations/<refrigerant>/` |
 
 The COP sweep saves its progress every 5 cycles, and can be continued after an interruption. The figure below shows the COP map of R1234ze(E).
@@ -50,6 +50,8 @@ The cycle calculation method is selected with `calculation_method`. `full_optimi
 ```bash
 python thermodyanmics_calculation_methods_comparison/thermodynamics_calculation_methods_comparison.py --data-dir "results/COP_investigations/R1234ze(E)/data"
 ```
+
+Two investigations support the results of the thesis, and are run in the same way from the root of the repository. `global_optimum_check/global_optimum_check.py` repeats the optimization of a cycle for several seeds of the differential evolution algorithm, and shows the coverage of the design space by the evaluated candidates. `perturbation_study/perturbation_study.py` perturbs the cycle specifications of the R1234ze(E), CO2 and MM config files one at a time by -20 % and +20 %, and evaluates the optimal cycle of every configuration in parallel.
 
 `postprocess.py` also contains the empty T-s and p-h diagrams of a substance, the effect of the component efficiencies on the cycle and the COP maps of two refrigerants side by side. The margins around the cycle and the size of the optimizer progress figure are arguments of `make_cycle_plots`, and the diagram backgrounds are specified in `config/thermoplot/`.
 
