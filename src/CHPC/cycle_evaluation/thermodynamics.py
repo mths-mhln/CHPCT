@@ -352,14 +352,14 @@ def _candidate_bounds(cycle_config):
         "T_ref_3": (T_h_in + ΔT_pp_min_cond, T_h_in + 30.0),
     }
 
-def evaluate_cycle_candidate(cycle_config, PR, T_ref_1_var, s_ref_1_var, T_ref_3, verbose=True):
+def evaluate_cycle_candidate(cycle_config, PR, T_ref_1, s_ref_1, T_ref_3, verbose=True):
     """Evaluate one cycle candidate and reject infeasible states.
 
     Args:
         cycle_config: Cycle configuration dictionary.
         PR: Candidate pressure ratio.
-        T_ref_1_var: Candidate inlet temperature for state 1.
-        s_ref_1_var: Candidate inlet entropy for state 1.
+        T_ref_1: Candidate inlet temperature for state 1.
+        s_ref_1: Candidate inlet entropy for state 1.
         T_ref_3: Candidate condenser outlet temperature.
         verbose: Whether to log rejection reasons.
 
@@ -386,8 +386,7 @@ def evaluate_cycle_candidate(cycle_config, PR, T_ref_1_var, s_ref_1_var, T_ref_3
     try:
         # state 1 follows from a single (T, s) flash. A second (T, p) flash is ill-posed for candidates inside the 
         # saturation dome, since p_ref_1 is then the saturation pressure at T_ref_1.
-        p_ref_1, h_ref_1, s_ref_1, Q_ref_1 = _cp_props(("P", "H", "S", "Q"), "T", T_ref_1_var, "S", s_ref_1_var, fluid)
-        T_ref_1 = T_ref_1_var
+        p_ref_1, h_ref_1, Q_ref_1 = _cp_props(("P", "H", "Q"), "T", T_ref_1, "S", s_ref_1, fluid)
         if T_ref_1 > T_c_in - ΔT_pp_min_evap + 1e-3:
             if verbose:
                 logger.info(f"Candidate rejected due to T_ref_1 constraint: T_ref_1={T_ref_1:.2f} K, T_c_in={T_c_in:.2f} K, ΔT_pp_min_evap={ΔT_pp_min_evap:.2f} K")
@@ -396,7 +395,7 @@ def evaluate_cycle_candidate(cycle_config, PR, T_ref_1_var, s_ref_1_var, T_ref_3
         Q_ref_1 = _vapour_quality_scaler(Q_ref_1)
         if Q_ref_1 < 0.999:
             if verbose:
-                logger.info(f"Candidate rejected due to subcooled/ref_1 constraint: Q_ref_1={Q_ref_1:.4f}")
+                logger.info(f"Candidate rejected due to subcooled Q_ref_1 constraint: Q_ref_1={Q_ref_1:.4f}")
             return None
         T_ev = _cp_props("T", "P", p_ref_1, "Q", 1, fluid)
         h2_is = _cp_props("H", "P", p_ref_2, "S", s_ref_1, fluid)
@@ -407,7 +406,7 @@ def evaluate_cycle_candidate(cycle_config, PR, T_ref_1_var, s_ref_1_var, T_ref_3
         h_ref_3, s_ref_3 = _cp_props(("H", "S"), "T", T_ref_3, "P", p_ref_2, fluid)
         Tcrit = _cp_props("Tcrit", fluid)
         s_crit = _cp_props("S", "P", Pcrit, "T", Tcrit, fluid)
-        if T_ref_2 < T_ref_3 * 0.99 or s_ref_3 > s_crit * 0.95:
+        if T_ref_2 < T_ref_3 * 0.99:
             if verbose:
                 logger.info(f"Candidate rejected due to ref_2/ref_3 constraints: T_ref_2={T_ref_2:.2f} K, T_ref_3={T_ref_3:.2f} K, s_ref_3={s_ref_3:.4f}, s_crit={s_crit:.4f}")
             return None
@@ -572,9 +571,10 @@ def compute_performance(cycle_data, cycle_config, general_config):
     η_shaft = cycle_config.get("η_shaft", 1.0)
     refrigerant = cycle_config["refrigerant"]
     Ẇ_turb = s["ṁ_ref"] * (s["h_ref_3"] - s["h_ref_4"])
-    Ẇ_comp = s["ṁ_ref"] * (s["h_ref_2"] - s["h_ref_1"])
+    Ẇ_comp_isenth = s["ṁ_ref"] * (s["h_ref_2"] - s["h_ref_1"])
+    Ẇ_comp_turb = s["ṁ_ref"] * (s["h_ref_2"] - s["h_ref_1"]) - Ẇ_turb * η_shaft
     Q_out = ṁ_h * cp_h * (s["T_h_out"] - T_h_in)
-    Q_in = s["ṁ_ref"] * _specific_heat_from_isobar_path(s["T_ref_1"], s["T_ev"], s["p_ref_1"], general_config, cycle_config, supercritical_cycle=s["supercritical_cycle"]) + \
+    Q_in_turb = s["ṁ_ref"] * _specific_heat_from_isobar_path(s["T_ref_1"], s["T_ev"], s["p_ref_1"], general_config, cycle_config, supercritical_cycle=s["supercritical_cycle"]) + \
            s["ṁ_ref"] * s["Δh_ev"] * (s["Q_ref_1"] - s["Q_ref_4"]) + \
            s["ṁ_ref"] * _specific_heat_from_isobar_path(s["T_ev"], s["T_ref_4"], s["p_ref_1"], general_config, cycle_config, supercritical_cycle=s["supercritical_cycle"])
     Q_in_isenth = s["ṁ_ref"] * s["Δh_ev"] * (s["Q_ref_1"] - s["Q_ref_4_isenth"]) + \
@@ -583,16 +583,17 @@ def compute_performance(cycle_data, cycle_config, general_config):
     COP_turb = _cop_turb(cycle_data, cycle_config)
     h_ref_4_is = _cp_props("H", "P", s["p_ref_4"], "S", s["s_ref_3"], f"REFPROP::{refrigerant}")
     Ẇ_turb_is = s["ṁ_ref"] * (s["h_ref_3"] - h_ref_4_is)
-    COP_is = Q_out / (Ẇ_comp - Ẇ_turb_is * η_shaft)
-    COP_isenth = Q_out / Ẇ_comp
+    COP_is = Q_out / (Ẇ_comp_isenth - Ẇ_turb_is * η_shaft)
+    COP_isenth = Q_out / Ẇ_comp_isenth
     # volumetric expansion ratio over the turbine, v_4 / v_3
     VR_turb = _cp_props("D", "T", s["T_ref_3"], "P", s["p_ref_3"], f"REFPROP::{refrigerant}") / \
               _cp_props("D", "P", s["p_ref_4"], "H", s["h_ref_4"], f"REFPROP::{refrigerant}")
     return dict(
         Ẇ_turb=Ẇ_turb,
-        Ẇ_comp=Ẇ_comp,
+        Ẇ_comp_isenth=Ẇ_comp_isenth,
+        Ẇ_comp_turb=Ẇ_comp_turb,
         Q_out=Q_out,
-        Q_in=Q_in,
+        Q_in_turb=Q_in_turb,
         COP_turb=COP_turb,
         COP_is=COP_is,
         COP_isenth=COP_isenth,

@@ -19,7 +19,7 @@ from CHPC.post_processing.visualization import THERMOPLOT_CONFIG_DIR, TS_MARGINS
 
 logger = setup_logger()
 
-config_files = ["config/R1234ze(E)/CHPC.ini", "config/CO2/CHPC.ini", "config/MM/CHPC.ini"]
+config_files = ["config/R1234ze(E)/CHPC.ini", "config/CO2/CHPC.ini"]
 perturbation = 0.2
 
 PARAMETERS = {

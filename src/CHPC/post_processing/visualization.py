@@ -15,7 +15,7 @@ logger = setup_logger()
 
 # thermoplot config files of the T-s and p-h diagram backgrounds. The fluid and the diagram 
 # ranges are overwritten, such that the diagrams are centred around the cycle.
-THERMOPLOT_CONFIG_DIR = Path(__file__).resolve().parents[2] / "config" / "thermoplot"
+THERMOPLOT_CONFIG_DIR = Path(__file__).resolve().parents[3] / "config" / "thermoplot"
 
 # Margins around the cycle in the T-s and p-h diagrams, as a fraction of the span of the cycle 
 # (and critical point) in entropy and temperature, or enthalpy and the logarithm of pressure.
@@ -410,7 +410,8 @@ def _draw_perf_box(ax, perf):
         rf"\mathrm{{COP_{{turb}}}}   & \num{{{perf['COP_turb']:.2f}}}   & [-] \\"
         rf"\mathrm{{COP_{{isenth}}}} & \num{{{perf['COP_isenth']:.2f}}} & [-] \\"
         rf"\dot{{W}}_{{turb}}        & \num{{{perf['Ẇ_turb']:.0f}}}     & [\mathrm{{W}}] \\"
-        rf"\dot{{W}}_{{compr}}       & \num{{{perf['Ẇ_comp']:.0f}}}     & [\mathrm{{W}}] \\"
+        rf"\dot{{W}}_{{extra}}       & \num{{{perf['Ẇ_comp_turb']:.0f}}}     & [\mathrm{{W}}] \\"
+        rf"\dot{{Q}}_{{in, turb}}      & \num{{{perf['Q_in_turb']:.0f}}}     & [\mathrm{{W}}] \\"
         rf"\dot{{Q}}_{{out}}     & \num{{{perf['Q_out']:.0f}}}       & [\mathrm{{W}}]"
         rf"\end{{array}}$"
     )
@@ -801,8 +802,8 @@ def _make_empty_plot_ph(refrigerant, thermoplot_config_file, show_spinodal=False
 
 
 
-# Public entry points for TS or PH plotting
-# =========================================
+# TS or PH plotting
+# =================
 def make_thdy_plot(
     cycle_data,
     perf,
@@ -876,8 +877,32 @@ def make_cycle_plots(results_file, ts_margins=None, ph_margins=None, opt_progres
 
 
 
-# Public entry point for COP_vs_eff_investigation
-# ===============================================
+# COP_vs_eff_investigation
+# ========================
+def _diagonal_label_positions(cl, X, Y, anti=False):
+    """Return one label position per contour level, where the contour crosses the plot diagonal.
+    Falls back to the midpoint of the longest path of the level if it never crosses the diagonal."""
+    x0, x1, y0, y1 = np.min(X), np.max(X), np.min(Y), np.max(Y)
+    f = (lambda x, y: (x - x0) / (x1 - x0) + (y - y0) / (y1 - y0) - 1.0) if anti \
+        else (lambda x, y: (x - x0) / (x1 - x0) - (y - y0) / (y1 - y0))
+    positions = []
+    for segs in cl.allsegs:
+        segs = [s for s in segs if len(s) >= 2]   # drop empty / degenerate paths
+        if not segs:
+            continue
+        best = None
+        for seg in segs:
+            g = f(seg[:, 0], seg[:, 1])
+            idx = np.where(g[:-1] * g[1:] <= 0)[0]
+            if idx.size:
+                best = tuple(seg[idx[0]])
+                break
+        if best is None:
+            seg = max(segs, key=len)
+            best = tuple(seg[len(seg) // 2])
+        positions.append(best)
+    return positions
+
 def make_COP_vs_eff_plot(X, Y, Z, refrigerant, output_dir="results/COP_investigations", file_suffix=""):
     configure_matplotlib()      
     output_path = Path(output_dir) / refrigerant
@@ -894,7 +919,7 @@ def make_COP_vs_eff_plot(X, Y, Z, refrigerant, output_dir="results/COP_investiga
     # Black contour lines + value labels on the isolines 
     cl = ax.contour(X, Y, Z, levels=12, colors='black', linewidths=0.8, linestyles='-')
     ax.clabel(cl, inline=True, fontsize=9, fmt='%.2f', colors='white',
-              manual=False, inline_spacing=3)
+              manual=_diagonal_label_positions(cl, X, Y), inline_spacing=3)
 
     # Colorbar and labels
     cbar = plt.colorbar(cf, ax=ax, label=rf'${cop_type_latex}$')

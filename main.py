@@ -12,6 +12,7 @@ from CHPC.utils.logger import setup_logger
 from rich.console import Console
 from rich.table import Table
 
+import numpy as np
 import timeit
 
 
@@ -19,7 +20,7 @@ logger = setup_logger()
 
 # config file of the analysis. CHPC.ini evaluates a single cycle, COP_vs_eff.ini the COP for a grid of
 # turbine and compressor efficiencies. The cycle calculation method is selected in the config file.
-config_file = "config/R1234ze(E)/COP_vs_eff.ini"
+config_file = "config/CO2/CHPC.ini"
 
 
 
@@ -61,14 +62,62 @@ def main(config_file: str, perform_verification: bool = False) -> None:
             ("VR_turb",     f"{perf['VR_turb']:.2f}",        "-",  "Volumetric expansion ratio across the turbine"),
             ("ṁ_ref",       f"{perf['ṁ_ref']:.3f}",         "kg/s",  "Mass flow rate of the refrigerant"),
             ("Ẇ_turb",      f"{perf['Ẇ_turb']:.0f}",         "W",  "Turbine power output"),
-            ("Ẇ_comp",      f"{perf['Ẇ_comp']:.0f}",         "W",  "Compressor power input"),
-            ("Q_in",        f"{perf['Q_in']:.0f}",           "W",  "Heat absorbed by the cycle (actual)"),
+            ("Ẇ_comp_turb", f"{perf['Ẇ_comp_turb']:.0f}",     "W",  "Additional compressor power input if turbine"),
+            ("Q_in_turb",        f"{perf['Q_in_turb']:.0f}",           "W",  "Heat absorbed by the cycle (actual)"),
             ("Q_in_isenth", f"{perf['Q_in_isenth']:.0f}",    "W",  "Heat absorbed under isenthalpic process"),
             ("Q_out",       f"{perf['Q_out']:.0f}",          "W",  "Heat rejected by the cycle")
         ]
         for symbol, value, unit, description in rows:
             table.add_row(symbol, value, unit, description)
         Console().print(table)
+
+        # State point table of the resulting cycle (same keys for both calculation methods).
+        cycle_table = Table(title=f"Cycle State Points - {cycle_config['refrigerant']}", show_lines=False)
+        cycle_table.add_column("Point", style="cyan", no_wrap=True)
+        cycle_table.add_column("Description", style="dim")
+        cycle_table.add_column("p (bar)", justify="right")
+        cycle_table.add_column("T (K)", justify="right")
+        cycle_table.add_column("h (kJ/kg)", justify="right")
+        cycle_table.add_column("s (kJ/kg/K)", justify="right")
+        cycle_table.add_column("x (-)", justify="right")
+
+        point_descriptions = {
+            1: "Evaporator outlet / compressor inlet",
+            2: "Compressor outlet / condenser inlet",
+            3: "Condenser outlet / turbine inlet",
+            4: "Turbine outlet / evaporator inlet",
+        }
+        for i, description in point_descriptions.items():
+            cycle_table.add_row(
+                str(i),
+                description,
+                f"{cycle_data[f'p_ref_{i}'] / 1e5:.2f}", # Pa -> bar (assumed SI input)
+                f"{cycle_data[f'T_ref_{i}'] :.2f}", # K -> °C (assumed SI input)
+                f"{cycle_data[f'h_ref_{i}'] / 1e3:.2f}", # J/kg -> kJ/kg
+                f"{cycle_data[f's_ref_{i}'] / 1e3:.4f}", # J/kg/K -> kJ/kg/K
+                f"{cycle_data[f'Q_ref_{i}']:.3f}",
+            )
+        Console().print(cycle_table)
+
+        # Operating conditions of the cycle: refrigerant mass flow and evaporation/condensation temperatures.
+        operating_table = Table(title=f"Cycle Operating Conditions - {cycle_config['refrigerant']}", show_lines=False)
+        operating_table.add_column("Symbol", style="cyan", no_wrap=True)
+        operating_table.add_column("Value", justify="right")
+        operating_table.add_column("Unit", justify="center")
+        operating_table.add_column("Description", style="dim")
+        # Evaporation/condensation temperatures can be NaN: no condensation in a transcritical cycle,
+        # and neither in a fully supercritical cycle. Show "N/A" and add a note in the description.
+        T_ev, T_cond = cycle_data['T_ev'], cycle_data['T_cond']
+        fmt = lambda T: "N/A" if T==None else f"{T:.2f}"
+        note = " (supercritical)" if T_ev==None and T_cond==None else " (transcritical)" if T_cond==None else ""
+        operating_rows = [
+            ("ṁ_ref",  f"{cycle_data['ṁ_ref']:.3f}",  "kg/s", "Mass flow rate of the refrigerant"),
+            ("T_ev",   fmt(T_ev),                      "K",    "Evaporation temperature"),
+            ("T_cond", fmt(T_cond),                    "K",    "Condensation temperature" + note),
+        ]
+        for symbol, value, unit, description in operating_rows:
+            operating_table.add_row(symbol, value, unit, description)
+        Console().print(operating_table)
 
         refrigerant = cycle_config["refrigerant"]
         results_file = save_results(

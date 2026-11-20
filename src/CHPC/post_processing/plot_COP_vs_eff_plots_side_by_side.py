@@ -11,6 +11,11 @@ from CHPC.utils.logger import setup_logger
 logger = setup_logger()
 
 
+"""
+Used to plot COP_vs_eff
+"""
+
+
 def _parse_metadata_from_filename(file_path: Path):
 	"""Parse refrigerant and COP key from COP sweep filename."""
 	stem = file_path.stem

@@ -8,15 +8,22 @@ from CHPC.post_processing.visualization import make_cycle_plots, make_COP_vs_eff
 # T-s, p-h and optimizer progress diagrams of a CHPC analysis. The results file name carries the calculation 
 # method if it is not full_optimization, e.g. CHPC_R1234ze(E)_three_temp_fix.npz. The margins around the cycle and 
 # the size of the optimizer progress figure can be adapted, e.g. ts_margins={"T_top": 0.5}, see visualization.py.
-# make_cycle_plots("results/heat_pump_thermodynamic_diagrams/CO2/data/CHPC_CO2.npz")
+# make_cycle_plots("results/heat_pump_thermodynamic_diagrams/R1234ze(E)/data/CHPC_R1234ze(E).npz")
 # plt.show()
+make_cycle_plots("results/heat_pump_thermodynamic_diagrams/CO2/data/CHPC_CO2.npz")
+plt.show()
 
 
 
 # COP maps (contour plot and 3D surface) of a COP vs efficiency investigation
-data = np.load("results/COP_investigations/R1234ze(E)/data/COP_vs_eff_R1234ze(E)_COP_turb.npz")
-make_COP_vs_eff_plot(data["X"], data["Y"], data["Z"], refrigerant="R1234ze(E)")
-plt.show()
+# data = np.load("results/COP_investigations/R1234ze(E)/data/COP_vs_eff_R1234ze(E)_COP_turb.npz")
+# make_COP_vs_eff_plot(data["X"], data["Y"], data["Z"], refrigerant="R1234ze(E)")
+# plt.show()
+
+# data = np.load("results/COP_investigations/CO2/data/COP_vs_eff_CO2_COP_turb.npz")
+# make_COP_vs_eff_plot(data["X"], data["Y"], data["Z"], refrigerant="CO2")
+# plt.show()
+
 
 
 

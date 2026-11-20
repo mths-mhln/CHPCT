@@ -56,7 +56,7 @@ def run_global_optimum_check(config_file, seeds, output_dir="results/global_opti
 
 # Coverage of the design space
 # ============================
-def coverage_metrics(x, bounds, n_bins=5, n_reference=5, seed=0):
+def coverage_metrics(x, bounds, n_bins=10, n_reference=5, seed=0):
     """Quantify how well the candidates cover the design space, normalized to the unit hypercube by the bounds.
 
     The share of visited cells is the fraction of the n_bins^d cells of equal size that contain at least one candidate. 
@@ -120,8 +120,8 @@ def make_candidate_scatter_matrix(results_file, other_results_files=(), output_d
             else:
                 ax.scatter(x[failed, j], x[failed, i], s=1, color="#bbbbbb", alpha=0.3, rasterized=True)
                 sc = ax.scatter(x[~failed, j], x[~failed, i], s=2, c=-objective[~failed], cmap="viridis", rasterized=True)
-                for other in others:
-                    ax.scatter(other[j], other[i], marker="x", s=40, color="black", zorder=4)
+                # for other in others:
+                #     ax.scatter(other[j], other[i], marker="x", s=40, color="black", zorder=4)
                 ax.scatter(best[j], best[i], marker="*", s=160, color="red", edgecolor="black", linewidth=0.6, zorder=5)
                 ax.set_ylim(bounds[i])
             ax.set_xlim(bounds[j])
