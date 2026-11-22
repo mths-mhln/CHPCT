@@ -990,10 +990,12 @@ def make_optimizer_progress_plot(
     valid_mask = ~failed
     if np.any(valid_mask):
         ax.scatter(eval_idx[valid_mask], cop_eval[valid_mask], s=10, alpha=0.45,
-                  color="#1a3a6b", label=rf"$\mathrm{{Valid\ candidate\ (n={n_valid})}}$")
+                  color="#1a3a6b", label=rf"$\mathrm{{Valid\ candidate\ (n={n_valid})}}$",
+                  rasterized=True)
     if np.any(failed):
         ax.scatter(eval_idx[failed], np.zeros(np.sum(failed)), s=12, alpha=0.8, marker="x",
-                  color="#d64545", label=rf"$\mathrm{{Infeasible\ candidate\ (m={n_failed})}}$")
+                  color="#d64545", label=rf"$\mathrm{{Infeasible\ candidate\ (m={n_failed})}}$",
+                  rasterized=True)
 
     ax.plot(eval_idx, cop_best_so_far, color="black", lw=1.1,
             label=r"$\mathrm{Best\ so\ far}$", zorder=3)
@@ -1003,7 +1005,7 @@ def make_optimizer_progress_plot(
     ax.set_ylabel(r"$\mathrm{COP}_{\mathrm{turb}}\ [-]$", fontsize=label_fontsize)
     ax.tick_params(axis="both", labelsize=tick_fontsize)
     ax.grid(True, alpha=0.25)
-    ax.legend(loc="best", fontsize=legend_fontsize, framealpha=0.85)
+    ax.legend(loc="upper right", fontsize=legend_fontsize, framealpha=0.85)
 
     fig.tight_layout()
 

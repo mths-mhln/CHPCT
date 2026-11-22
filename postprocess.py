@@ -8,8 +8,8 @@ from CHPC.post_processing.visualization import make_cycle_plots, make_COP_vs_eff
 # T-s, p-h and optimizer progress diagrams of a CHPC analysis. The results file name carries the calculation 
 # method if it is not full_optimization, e.g. CHPC_R1234ze(E)_three_temp_fix.npz. The margins around the cycle and 
 # the size of the optimizer progress figure can be adapted, e.g. ts_margins={"T_top": 0.5}, see visualization.py.
-# make_cycle_plots("results/heat_pump_thermodynamic_diagrams/R1234ze(E)/data/CHPC_R1234ze(E).npz")
-# plt.show()
+make_cycle_plots("results/heat_pump_thermodynamic_diagrams/R1234ze(E)/data/CHPC_R1234ze(E).npz")
+plt.show()
 make_cycle_plots("results/heat_pump_thermodynamic_diagrams/CO2/data/CHPC_CO2.npz")
 plt.show()
 
