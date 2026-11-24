@@ -4,3 +4,4 @@ __pycache__/
 output.txt
 spinodal_Water.png
 results/
+docs/build/
